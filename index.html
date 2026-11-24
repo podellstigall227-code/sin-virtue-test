@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f2e8">
+<title>测测你的七宗罪与七美德占比 · 罪与德</title>
+<style>
+  :root{
+    --ink:#1d1b18;
+    --ink-2:#4a453d;
+    --ink-3:#8a8175;
+    --paper:#f7f2e8;
+    --paper-2:#efe6d5;
+    --line:rgba(29,27,24,.14);
+    --gold:#b08d57;
+    --gold-soft:rgba(176,141,87,.45);
+    --cinnabar:#9c2b25;
+    --sin:#9c2b25;
+    --virtue:#4f7a72;
+    --serif:"Noto Serif SC","Source Han Serif SC","Songti SC",STSong,"SimSun",serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    margin:0;color:var(--ink);font-family:var(--serif);
+    background:
+      radial-gradient(circle at 18% 8%, rgba(156,43,37,.10), transparent 42%),
+      radial-gradient(circle at 86% 84%, rgba(176,141,87,.16), transparent 44%),
+      linear-gradient(180deg,#faf6ee 0%, var(--paper) 42%, #f1e9d9 100%);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;line-height:1.7;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+  }
+  .app{
+    position:relative;z-index:1;
+    min-height:100vh;min-height:100dvh;
+    display:flex;flex-direction:column;
+    padding:32px 20px 44px;
+  }
+  .screen{display:none;width:100%;max-width:620px;margin:auto}
+  #screenQuiz{margin-top:0;margin-bottom:auto}
+  .screen.is-active{display:block;animation:screenIn .55s cubic-bezier(.2,.75,.25,1) both}
+  @keyframes screenIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+  /* 首页 */
+  .home{text-align:center}
+  .seal{
+    width:58px;height:58px;margin:0 auto 22px;display:grid;place-items:center;
+    background:linear-gradient(160deg,#a8362d,#8d241f);
+    color:#fdf3e3;font-size:28px;font-weight:600;
+    border-radius:7px;transform:rotate(-4deg);
+    box-shadow:0 10px 24px -12px rgba(120,30,24,.8), inset 0 0 0 1px rgba(255,255,255,.18);
+  }
+  .eyebrow{margin:0 0 14px;font-size:12px;letter-spacing:.42em;text-indent:.42em;color:var(--ink-3)}
+  .title{margin:0;font-size:clamp(46px,14vw,76px);line-height:1.1;font-weight:600;letter-spacing:.1em;text-indent:.1em}
+  .title .sin{color:var(--cinnabar)}
+  .title .virtue{color:var(--virtue)}
+  .subtitle{margin:18px 0 0;font-size:clamp(15px,4.2vw,18px);line-height:2;letter-spacing:.12em;color:var(--ink-2)}
+  .lede{margin:22px 0 0;font-size:13px;line-height:2.1;letter-spacing:.08em;color:var(--ink-3)}
+  .home-foot{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);font-size:10.5px;letter-spacing:.14em;line-height:2;color:var(--ink-3)}
+  .home-foot .dot{color:var(--gold);margin:0 2px}
+
+  /* 按钮 */
+  .btn-primary{
+    appearance:none;border:0;cursor:pointer;font-family:inherit;
+    margin-top:34px;padding:16px 44px;font-size:16px;letter-spacing:.3em;text-indent:.3em;
+    color:#fdf6e8;background:linear-gradient(150deg,#2c2a26,#151412);
+    border-radius:4px;position:relative;overflow:hidden;
+    box-shadow:0 16px 30px -18px rgba(20,18,16,.9);
+    transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s;
+  }
+  .btn-primary::after{content:"";position:absolute;inset:4px;border:1px solid rgba(253,246,232,.26);border-radius:2px;pointer-events:none}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 22px 34px -18px rgba(20,18,16,.95)}
+  .btn-primary:active{transform:translateY(0) scale(.985)}
+  .btn-ghost{
+    appearance:none;cursor:pointer;font-family:inherit;font-size:13.5px;letter-spacing:.12em;
+    color:var(--ink-3);background:transparent;border:1px solid transparent;
+    padding:9px 12px;border-radius:4px;transition:color .2s,border-color .2s,background .2s;
+  }
+  .btn-ghost:hover{color:var(--ink);border-color:var(--line);background:rgba(255,255,255,.4)}
+  .btn-ghost:disabled{opacity:0;pointer-events:none}
+
+  /* 答题 */
+  .quiz-top{position:sticky;top:0;z-index:5;padding:8px 0 0;background:linear-gradient(180deg,var(--paper) 60%,rgba(247,242,232,0))}
+  .progress{height:2px;background:rgba(29,27,24,.1);border-radius:2px;overflow:hidden}
+  .progress-fill{
+    height:100%;width:0;border-radius:2px;
+    background:linear-gradient(90deg,var(--gold),var(--cinnabar));
+    transition:width .5s cubic-bezier(.25,.8,.25,1);
+  }
+  .quiz-meta{display:flex;justify-content:space-between;align-items:baseline;margin:12px 2px 0;font-size:11.5px;letter-spacing:.18em;color:var(--ink-3)}
+  .quiz-hint{opacity:.75}
+  .q-card{margin-top:34px;will-change:transform,opacity}
+  .q-card.q-in{animation:qIn .45s cubic-bezier(.2,.8,.25,1) both}
+  @keyframes qIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  .q-kicker{margin:0 0 12px;font-size:11.5px;letter-spacing:.3em;color:var(--gold)}
+  .q-text{margin:0 0 28px;font-size:clamp(21px,5.8vw,27px);line-height:1.72;font-weight:600;letter-spacing:.02em;overflow-wrap:break-word}
+  .options{display:grid;gap:12px;min-width:0}
+  .option{
+    appearance:none;cursor:pointer;font-family:inherit;text-align:left;
+    display:flex;align-items:flex-start;gap:13px;width:100%;min-width:0;
+    padding:15px 17px;font-size:clamp(14.5px,4.1vw,16px);line-height:1.65;color:var(--ink);
+    background:rgba(255,255,255,.58);border:1px solid var(--line);border-radius:9px;
+    transition:transform .22s cubic-bezier(.2,.8,.2,1), border-color .22s, background .22s, box-shadow .22s, color .22s;
+  }
+  .option .badge{
+    flex:0 0 auto;width:23px;height:23px;margin-top:1px;display:grid;place-items:center;
+    font-size:11px;color:var(--gold);border:1px solid var(--gold-soft);border-radius:3px;transition:inherit;
+  }
+  .option .opt-text{flex:1 1 auto;min-width:0;text-wrap:balance}
+  .option:hover{transform:translateY(-2px);border-color:var(--gold-soft);background:#fffdf8;box-shadow:0 14px 26px -22px rgba(29,27,24,.8)}
+  .option.is-selected{background:linear-gradient(150deg,#2f2c27,#1a1917);color:#f8f1e2;border-color:#1a1917}
+  .option.is-selected .badge{color:#f8f1e2;border-color:rgba(248,241,226,.5)}
+  .option.is-fading{opacity:0;transform:translateY(-6px) scale(.99)}
+  .quiz-foot{display:flex;justify-content:space-between;align-items:center;margin-top:30px;min-height:34px}
+  .quiz-count{font-size:11.5px;letter-spacing:.16em;color:var(--ink-3)}
+
+  /* 结果卡片 */
+  .share-card{
+    position:relative;isolation:isolate;overflow:hidden;
+    padding:clamp(22px,5.8vw,36px);
+    background:
+      radial-gradient(circle at 0% 0%, rgba(156,43,37,.10), transparent 40%),
+      radial-gradient(circle at 100% 0%, rgba(176,141,87,.18), transparent 42%),
+      linear-gradient(180deg,#fffdf7 0%,#f7efe0 100%);
+    border:1px solid var(--gold-soft);border-radius:3px;
+    box-shadow:0 30px 60px -42px rgba(29,27,24,.75);
+    animation:cardIn .7s cubic-bezier(.18,.8,.25,1) both;
+  }
+  @keyframes cardIn{from{opacity:0;transform:translateY(22px) scale(.985)}to{opacity:1;transform:none}}
+  .share-card::before{content:"";position:absolute;inset:9px;border:1px solid rgba(176,141,87,.26);border-radius:2px;pointer-events:none}
+  .share-card > *{position:relative;z-index:1}
+  .card-top{display:flex;justify-content:space-between;align-items:baseline;font-size:10.5px;letter-spacing:.24em;color:var(--ink-3)}
+  .card-brand{color:var(--gold)}
+
+  .duo{display:flex;align-items:stretch;gap:10px;margin-top:24px}
+  .side{flex:1 1 0;min-width:0;text-align:center;padding:6px 2px}
+  .stamp{
+    width:46px;height:46px;margin:0 auto 10px;display:grid;place-items:center;
+    font-size:22px;color:#fdf3e3;background:linear-gradient(160deg,#a8362d,#8d241f);
+    border-radius:5px;transform:rotate(-5deg);
+    box-shadow:0 10px 22px -14px rgba(120,30,24,.9), inset 0 0 0 1px rgba(255,255,255,.16);
+  }
+  .stamp.v{background:linear-gradient(160deg,#5d8c83,#3f665f);transform:rotate(5deg)}
+  .side-name{font-size:clamp(24px,7vw,32px);letter-spacing:.1em;font-weight:600;line-height:1.3}
+  .side-en{font-size:9.5px;letter-spacing:.28em;color:var(--ink-3);margin-top:4px}
+  .side-pct{font-size:clamp(18px,5.2vw,22px);letter-spacing:.04em;margin-top:8px;font-variant-numeric:tabular-nums}
+  .side.sin .side-pct{color:var(--sin)}
+  .side.virtue .side-pct{color:var(--virtue)}
+  .divider{flex:0 0 1px;background:linear-gradient(180deg,transparent,rgba(176,141,87,.45),transparent);margin:8px 2px}
+
+  .combo{
+    margin:24px 0 0;padding-top:18px;border-top:1px solid rgba(176,141,87,.3);
+    font-size:clamp(14.5px,4.1vw,17px);line-height:2;letter-spacing:.03em;text-align:center;
+  }
+  .combo b{font-weight:600;color:var(--sin)}
+  .combo i{font-style:normal;font-weight:600;color:var(--virtue)}
+
+  .scale{margin-top:20px}
+  .scale-bar{display:flex;height:6px;border-radius:6px;overflow:hidden;background:rgba(29,27,24,.08)}
+  .scale-bar i{display:block;height:100%;width:0;transition:width 1s cubic-bezier(.2,.8,.2,1) .3s}
+  .scale-bar .v{background:linear-gradient(90deg,#7aa89f,#3f665f)}
+  .scale-bar .s{background:linear-gradient(90deg,#b23a30,#8d241f)}
+  .scale-labels{display:flex;justify-content:space-between;margin-top:8px;font-size:10.5px;letter-spacing:.14em;color:var(--ink-3)}
+  .scale-labels .v{color:var(--virtue)}
+  .scale-labels .s{color:var(--sin)}
+
+  .card-foot{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:20px;padding-top:14px;border-top:1px solid rgba(176,141,87,.3);font-size:10px;letter-spacing:.14em;color:var(--ink-3)}
+
+  /* 详情 */
+  .details{display:grid;gap:0;margin-top:30px}
+  .detail-block{padding:20px 2px;border-bottom:1px solid var(--line)}
+  .detail-block:first-child{border-top:1px solid var(--line)}
+  .detail-block h3{margin:0 0 10px;font-size:12px;letter-spacing:.24em;color:var(--gold);font-weight:600}
+  .detail-block h3::before{content:"◆";font-size:8px;margin-right:8px;vertical-align:2px;color:var(--cinnabar)}
+  .detail-block h3.v::before{color:var(--virtue)}
+  .detail-block p{margin:0 0 8px;font-size:14.5px;line-height:2.05;color:var(--ink-2)}
+  .detail-block p:last-child{margin-bottom:0}
+  .k{display:block;font-size:11px;letter-spacing:.2em;color:var(--ink-3);margin-bottom:2px}
+
+  .trait-list{display:grid;gap:9px;margin-top:4px}
+  .trait-row{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-3)}
+  .t-name{flex:0 0 3.2em;letter-spacing:.08em;color:var(--ink-2)}
+  .t-track{flex:1;height:3px;background:rgba(29,27,24,.09);border-radius:3px;overflow:hidden}
+  .t-track i{display:block;height:100%;width:0;border-radius:3px;transition:width .9s cubic-bezier(.2,.8,.2,1) .2s}
+  .t-track i.sin{background:linear-gradient(90deg,#b23a30,#8d241f)}
+  .t-track i.virtue{background:linear-gradient(90deg,#7aa89f,#3f665f)}
+  .t-pct{flex:0 0 2.9em;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+  .list-head{display:flex;justify-content:space-between;align-items:baseline;margin:18px 0 10px;font-size:11px;letter-spacing:.22em;color:var(--ink-3)}
+  .list-head:first-of-type{margin-top:0}
+  @media (max-width:559px){
+    .col-virtue{margin-top:24px}
+    .col-virtue .list-head{margin-top:0}
+  }
+  .list-head .c-sin{color:var(--sin)}
+  .list-head .c-virtue{color:var(--virtue)}
+
+  .result-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin-top:30px}
+  .result-actions .btn-primary{margin-top:0;padding:14px 34px;font-size:14.5px}
+  .share-tip{margin:18px 0 0;text-align:center;font-size:11px;letter-spacing:.18em;color:var(--ink-3)}
+  .toast{
+    position:fixed;left:50%;bottom:32px;transform:translate(-50%,14px);
+    background:#1f1d1a;color:#f8f1e2;font-size:12.5px;letter-spacing:.1em;
+    padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .3s, transform .3s;z-index:50;
+  }
+  .toast.is-on{opacity:1;transform:translate(-50%,0)}
+
+  @media (min-width:560px){
+    .trait-pairs{display:grid;grid-template-columns:1fr 1fr;gap:0 28px}
+    .trait-pairs .list-head:first-of-type{margin-top:0}
+  }
+  @media (max-width:480px){
+    .app{padding:24px 16px 36px}
+    .home{padding-top:5vh}
+    .quiz-hint{display:none}
+    .q-card{margin-top:26px}
+    .detail-block p{font-size:14px}
+    .card-foot{font-size:9px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.001ms !important;transition-duration:.001ms !important}
+  }
+</style>
+</head>
+<body>
+<main class="app">
+
+  <section class="screen is-active home" id="screenHome">
+    <div class="seal">衡</div>
+    <p class="eyebrow">人格占比 · 四十问</p>
+    <h1 class="title"><span class="sin">罪</span>与<span class="virtue">德</span></h1>
+    <p class="subtitle">测测你身体里<br>七宗罪与七美德的占比</p>
+    <p class="lede">40 道生活化选择题 · 约 4 分钟<br>不考道德，只问你会怎么做</p>
+    <button class="btn-primary" id="startBtn">开始测试</button>
+    <div class="home-foot">
+      傲慢 · 嫉妒 · 暴怒 · 懒惰 · 贪婪 · 暴食 · 色欲<br>
+      谦逊 · 仁爱 · 忍耐 · 勤勉 · 慷慨 · 节制 · 贞洁
+    </div>
+  </section>
+
+  <section class="screen quiz" id="screenQuiz">
+    <header class="quiz-top">
+      <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="quiz-meta">
+        <span id="qIndex">01 / 40</span>
+        <span class="quiz-hint">键盘 1 – 4 可选</span>
+      </div>
+    </header>
+    <div class="q-card" id="qCard">
+      <p class="q-kicker" id="qKicker">第 1 问</p>
+      <h2 class="q-text" id="qText"></h2>
+      <div class="options" id="options"></div>
+    </div>
+    <footer class="quiz-foot">
+      <button class="btn-ghost" id="backBtn">← 上一题</button>
+      <span class="quiz-count" id="quizCount"></span>
+    </footer>
+  </section>
+
+  <section class="screen result" id="screenResult">
+    <article class="share-card" id="shareCard">
+      <div class="card-top">
+        <span class="card-brand">罪与德 · 灵魂占比</span>
+        <span id="cardNo">SIN × VIRTUE</span>
+      </div>
+
+      <div class="duo">
+        <div class="side sin">
+          <div class="stamp">罪</div>
+          <div class="side-name" id="sinName">傲慢</div>
+          <div class="side-en" id="sinEn">PRIDE</div>
+          <div class="side-pct" id="sinPct">18%</div>
+        </div>
+        <div class="divider"></div>
+        <div class="side virtue">
+          <div class="stamp v">德</div>
+          <div class="side-name" id="virtueName">谦逊</div>
+          <div class="side-en" id="virtueEn">HUMILITY</div>
+          <div class="side-pct" id="virtuePct">16%</div>
+        </div>
+      </div>
+
+      <p class="combo" id="combo"></p>
+
+      <div class="scale">
+        <div class="scale-bar"><i class="v" id="barVirtue"></i><i class="s" id="barSin"></i></div>
+        <div class="scale-labels">
+          <span class="v" id="labelVirtue">德 52%</span>
+          <span class="s" id="labelSin">罪 48%</span>
+        </div>
+      </div>
+
+      <div class="card-foot">
+        <span>七宗罪 · 七美德</span>
+        <span>灵魂天平</span>
+      </div>
+    </article>
+
+    <section class="details">
+      <div class="detail-block">
+        <h3 id="sinTitle">你的主罪 · 傲慢</h3>
+        <p><span class="k">你身上的样子</span><span id="sinDesc"></span></p>
+        <p><span class="k">隐藏的一面</span><span id="sinShadow"></span></p>
+        <p><span class="k">解药</span><span id="sinRemedy"></span></p>
+      </div>
+      <div class="detail-block">
+        <h3 class="v" id="virtueTitle">你的主美德 · 谦逊</h3>
+        <p><span class="k">你身上的样子</span><span id="virtueDesc"></span></p>
+        <p><span class="k">小心</span><span id="virtueCost"></span></p>
+      </div>
+      <div class="detail-block">
+        <h3>完整占比</h3>
+        <div class="trait-pairs">
+          <div class="col">
+            <div class="list-head"><span class="c-sin">七宗罪</span><span id="sinTotal">48%</span></div>
+            <div class="trait-list" id="sinList"></div>
+          </div>
+          <div class="col col-virtue">
+            <div class="list-head"><span class="c-virtue">七美德</span><span id="virtueTotal">52%</span></div>
+            <div class="trait-list" id="virtueList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="result-actions">
+      <button class="btn-primary" id="retryBtn">重新测试</button>
+      <button class="btn-ghost" id="copyBtn">复制结果文案</button>
+    </div>
+    <p class="share-tip">长按截图，分享到小红书 / 朋友圈</p>
+  </section>
+
+</main>
+<div class="toast" id="toast">已复制</div>
+
+<script>
+/* ==DATA-START== */
+const TRAITS = {
+  pride: {
+    name:'傲慢', en:'PRIDE', type:'sin', say:'我上我也行',
+    desc:'你不太掩饰对平庸的不耐烦。别人还在犹豫，你已经在心里给出评判：这有什么难的。你讨厌被指挥，更讨厌被看低。',
+    shadow:'你的傲慢其实是护甲——越怕被看轻，越要先把自己抬高。所以被否定时，你反应总比别人大。',
+    remedy:'谦逊不是低头，是允许别人也有高光。'
+  },
+  envy: {
+    name:'嫉妒', en:'ENVY', type:'sin', say:'凭什么是他',
+    desc:'看到别人过得好，你第一反应是「凭什么」，第二反应才是「恭喜」。你比较得很快，也记得很清楚。',
+    shadow:'你嫉妒的东西，往往正是你不敢承认自己真正想要的。它像一张清单，写着你还没开始的事。',
+    remedy:'把比较的时间，拿去靠近。'
+  },
+  wrath: {
+    name:'暴怒', en:'WRATH', type:'sin', say:'有完没完',
+    desc:'你受不了磨叽、插队、甩锅。火气上来那一刻，理智会先下班三分钟，话已经出去了。',
+    shadow:'你生气的点，几乎都跟「不被尊重」有关。你要的不是赢，是对方承认你不好惹。',
+    remedy:'忍耐不是憋着，是给自己十秒。'
+  },
+  sloth: {
+    name:'懒惰', en:'SLOTH', type:'sin', say:'明天再说',
+    desc:'你不是做不到，你是懒得开始。你能拖到最后一刻，然后用一小时干完别人一天的事——这让你更加相信，早开始是没必要的。',
+    shadow:'你懒的往往不是事情本身，是那件事带来的情绪。一想到要面对谁，你就先躺下了。',
+    remedy:'勤勉不是拼命，是先动五分钟。'
+  },
+  greed: {
+    name:'贪婪', en:'GREED', type:'sin', say:'再多一点',
+    desc:'你对「还可以再多一点」有天然敏感：折扣、机会、别人的资源，你都看得见。你不是缺，你是怕不够。',
+    shadow:'你囤的不是东西，是安全感。清空一次购物车，比任何道理都让你踏实。',
+    remedy:'慷慨会让你发现，给出去的那部分不会消失。'
+  },
+  gluttony: {
+    name:'暴食', en:'GLUTTONY', type:'sin', say:'先吃再说',
+    desc:'压力大想吃，开心也想吃，难过更要吃。你的情绪需要一个出口，而它恰好长在嘴上。',
+    shadow:'你真正饿的，常常不是胃。你只是需要一个能立刻让自己好受一点的动作。',
+    remedy:'节制不是不吃，是吃到刚好。'
+  },
+  lust: {
+    name:'色欲', en:'LUST', type:'sin', say:'好看就行',
+    desc:'你对好看的人和好看的东西没有抵抗力。你很容易心动，也很享受心动本身，哪怕知道那不长久。',
+    shadow:'你追的常常不是某个人，而是那种「被点燃」的感觉。它比人更容易让你上头。',
+    remedy:'贞洁不是禁欲，是知道自己在追什么。'
+  },
+  humility: {
+    name:'谦逊', en:'HUMILITY', type:'virtue', do:'都行，你们定',
+    desc:'你习惯把功劳往外推，把责任往身上揽。别人夸你时你会先尴尬，然后赶紧说「没有没有」。',
+    cost:'小心，把「我不重要」说太多次，别人会当真。'
+  },
+  kindness: {
+    name:'仁爱', en:'KINDNESS', type:'virtue', do:'没事，我来吧',
+    desc:'你见不得别人难受，哪怕那个人你并不喜欢。你会记得别人随口的一句话，顺手帮一个不值一提的小忙，然后假装没帮过。',
+    cost:'你的心软没有门槛，容易被当成理所当然。'
+  },
+  patience: {
+    name:'忍耐', en:'PATIENCE', type:'virtue', do:'算了，等等吧',
+    desc:'你的情绪稳定得有点不真实。你不是没脾气，是能在发火前把话咽下去。别人爆炸的时候，你还在想怎么收场。',
+    cost:'忍太久的人，会在某个小事上突然崩塌。'
+  },
+  diligence: {
+    name:'勤勉', en:'DILIGENCE', type:'virtue', do:'先做完再睡',
+    desc:'你不太相信运气，你相信提前准备。你会把事情做在前面，会反复检查，会在别人休息时把明天的坑先填上。',
+    cost:'你很容易把「努力」当成唯一的安全感。'
+  },
+  charity: {
+    name:'慷慨', en:'CHARITY', type:'virtue', do:'这顿我来',
+    desc:'你对钱的态度是：花在别人身上比花在自己身上舒服。你抢着买单、乐于分享，看到别人因为你的东西开心，你会比对方还高兴。',
+    cost:'你不是不缺钱，你只是不好意思拒绝。'
+  },
+  temperance: {
+    name:'节制', en:'TEMPERANCE', type:'virtue', do:'到这儿就够了',
+    desc:'你身上有一种「够了」的分寸感。你能在第二杯的时候放下杯子，能在购物车里删掉一半，能在情绪最浓的时候闭嘴。',
+    cost:'过度克制的人，容易把生活过成一份清单。'
+  },
+  chastity: {
+    name:'贞洁', en:'CHASTITY', type:'virtue', do:'不好意思，我有边界',
+    desc:'你心里有一条很清楚的线。你不玩暧昧，不给人错觉，也不允许自己被随便撩动。认定之前，你比谁都冷静。',
+    cost:'有时候你的边界太硬，把真心也挡在外面。'
+  }
+};
+const SIN_KEYS = ['pride','envy','wrath','sloth','greed','gluttony','lust'];
+const VIRTUE_KEYS = ['humility','kindness','patience','diligence','charity','temperance','chastity'];
+const ALL_KEYS = SIN_KEYS.concat(VIRTUE_KEYS);
+
+const QUESTIONS = [
+  { q:'同事升职了，你第一反应是', o:[
+    ['太好了，晚上我请客庆祝','kindness'],
+    ['换我上，肯定比他干得好','pride'],
+    ['打听他到底凭什么升的','envy'],
+    ['关我什么事，继续摸鱼','sloth'] ] },
+  { q:'外卖超时四十分钟', o:[
+    ['电话里把骑手数落一顿','wrath'],
+    ['算了，谁都不容易','patience'],
+    ['等着等着，又下单了炸鸡','gluttony'],
+    ['退款，再要一张补偿券','greed'] ] },
+  { q:'半夜刷到别人晒旅行照', o:[
+    ['立刻查机票，我也要去','greed'],
+    ['存成壁纸，看看就好','temperance'],
+    ['心里冒出一句「有钱真好」','envy'],
+    ['顺手点个赞，说句好羡慕','kindness'] ] },
+  { q:'周五下班前，老板临时加活', o:[
+    ['当场黑脸：凭什么又是我','wrath'],
+    ['接下来，周末加班也要交','diligence'],
+    ['嘴上答应，转头拖到周一','sloth'],
+    ['先问清楚，有没有加班费','greed'] ] },
+  { q:'朋友请你周末帮忙搬家', o:[
+    ['一口答应，还提前到','kindness'],
+    ['顺便请他吃饭，庆祝乔迁','charity'],
+    ['说这周太累，下周行不行','sloth'],
+    ['觉得这种事，没我不行','pride'] ] },
+  { q:'奶茶第二杯半价', o:[
+    ['两杯都喝，反正便宜','gluttony'],
+    ['只买一杯，热量够了','temperance'],
+    ['两杯都要，留着明天喝','greed'],
+    ['买两杯，一杯给同事','charity'] ] },
+  { q:'路上被人强行别了一下', o:[
+    ['追上去，把车窗摇下来','wrath'],
+    ['深呼吸，当没看见','patience'],
+    ['心想：这技术也配开车','pride'],
+    ['无所谓，我不赶时间','sloth'] ] },
+  { q:'刷到前任的现任照片', o:[
+    ['开始比较，她哪里比我好','envy'],
+    ['真心希望他过得好','kindness'],
+    ['关掉，各自安好，别越界','chastity'],
+    ['不得不说，长得是真好看','lust'] ] },
+  { q:'深夜有人给你发来暧昧消息', o:[
+    ['秒回，然后聊到三点','lust'],
+    ['已读不回，边界要清楚','chastity'],
+    ['回一句「早点睡」，放下手机','temperance'],
+    ['懒得回，明天再说','sloth'] ] },
+  { q:'发工资那天', o:[
+    ['先存一半，再规划剩下的','temperance'],
+    ['立刻清空购物车','greed'],
+    ['给爸妈转一笔','charity'],
+    ['先去吃顿好的','gluttony'] ] },
+  { q:'项目出了错，要有人担责', o:[
+    ['先认下来，再一起查原因','humility'],
+    ['不是我的责任，必须说清楚','pride'],
+    ['当场把桌子拍响','wrath'],
+    ['通宵改完，明天照常上线','diligence'] ] },
+  { q:'排队时有人插到你前面', o:[
+    ['直接开怼：后面排队去','wrath'],
+    ['算了，多等一会儿','patience'],
+    ['心里嫌这人素质真差','pride'],
+    ['先看他是不是真有急事','kindness'] ] },
+  { q:'朋友买了你惦记很久的包', o:[
+    ['第一反应是「她哪来这么多钱」','envy'],
+    ['说好看，还问她在哪买的','kindness'],
+    ['立刻打开同款页面','greed'],
+    ['关掉手机，提醒自己别乱花','temperance'] ] },
+  { q:'周末两天，你怎么过', o:[
+    ['早起、运动、把计划做完','diligence'],
+    ['睡到下午，醒了再睡','sloth'],
+    ['约人吃饭，从中午吃到晚上','gluttony'],
+    ['不安排，随机散步看场电影','temperance'] ] },
+  { q:'会上有人当众指出你的错', o:[
+    ['先谢谢他，再解释清楚','humility'],
+    ['当场把话顶回去，面子不能丢','pride'],
+    ['火气上来，声音先大了','wrath'],
+    ['听完，说「我回去改」','patience'] ] },
+  { q:'减肥第三天', o:[
+    ['算了，先吃一顿再减','gluttony'],
+    ['照常去跑步，少吃一口','diligence'],
+    ['只吃一半，剩下的打包','temperance'],
+    ['明天再开始，今天先躺','sloth'] ] },
+  { q:'喜欢的人已经名花有主', o:[
+    ['保持距离，别给自己找事','chastity'],
+    ['心里不服：我哪里不如他','envy'],
+    ['真心祝福，然后自己消化','kindness'],
+    ['还是想撩一下，看看有没有机会','lust'] ] },
+  { q:'朋友聚会起哄，让你和异性玩大冒险', o:[
+    ['配合一下，气氛重要','lust'],
+    ['直接拒绝，别越界','chastity'],
+    ['笑着岔开话题','temperance'],
+    ['有点烦，这种局下次不来了','wrath'] ] },
+  { q:'拍到一张特别好看的自拍', o:[
+    ['发九宫格，配一句「随便拍拍」','pride'],
+    ['只发给那一个想看的人','lust'],
+    ['存起来，一张也不发','humility'],
+    ['发到群里，问大家要不要原图','charity'] ] },
+  { q:'路上捡到一百块', o:[
+    ['揣兜里，当运气','greed'],
+    ['交给附近保安','humility'],
+    ['请同事喝奶茶','charity'],
+    ['站在原地等，看有没有人回来找','kindness'] ] },
+  { q:'网上两拨人吵得不可开交', o:[
+    ['下场参战，我就要说赢','wrath'],
+    ['划走，关我什么事','patience'],
+    ['觉得两边都挺蠢的','pride'],
+    ['看得停不下来，耽误了正事','sloth'] ] },
+  { q:'说好只看一集', o:[
+    ['通宵刷完，天亮才睡','sloth'],
+    ['一集结束，准时关掉','temperance'],
+    ['边看边吃，一袋薯片见底','gluttony'],
+    ['关掉，明天还要早起','diligence'] ] },
+  { q:'有人当面夸你', o:[
+    ['「没有没有，运气好」','humility'],
+    ['「我也觉得」','pride'],
+    ['顺手把对方也夸一遍','kindness'],
+    ['琢磨他是不是有事求我','envy'] ] },
+  { q:'大促当天', o:[
+    ['清空购物车，先买了再说','greed'],
+    ['只买清单上的东西','temperance'],
+    ['给家里人囤一整箱','charity'],
+    ['零食囤三箱，慢慢吃','gluttony'] ] },
+  { q:'领导当众表扬你', o:[
+    ['有点飘，说话都大声了','pride'],
+    ['说这是团队的功劳','humility'],
+    ['心里已经在想下一步','diligence'],
+    ['当场说请大家喝奶茶','charity'] ] },
+  { q:'有人在你面前反复炫耀', o:[
+    ['心里翻白眼，表面还得笑','envy'],
+    ['拿更厉害的压回去','pride'],
+    ['微笑听完，不接话','patience'],
+    ['把话题转到别处','temperance'] ] },
+  { q:'对象的手机在桌上响了', o:[
+    ['直接看，没什么不能看','pride'],
+    ['不看，那是他的隐私','chastity'],
+    ['问一句是谁','envy'],
+    ['懒得管，继续躺着','sloth'] ] },
+  { q:'看到一件很喜欢但很贵的东西', o:[
+    ['买了，钱可以再赚','greed'],
+    ['放回货架，等打折再说','temperance'],
+    ['买下来送给家里人','charity'],
+    ['觉得它配得上我','pride'] ] },
+  { q:'朋友失恋，凌晨给你打电话', o:[
+    ['陪他聊到天亮','kindness'],
+    ['说一句「我早说过」','wrath'],
+    ['张罗着给他介绍新的','lust'],
+    ['转个红包，让他去吃顿好的','charity'] ] },
+  { q:'快递被放到了很远的驿站', o:[
+    ['投诉到底，谁惯的','wrath'],
+    ['自己去拿，当散步','patience'],
+    ['要求赔偿，还要补偿券','greed'],
+    ['懒得去，先放着','sloth'] ] },
+  { q:'朋友做错事，还嘴硬', o:[
+    ['当场拆穿，别装了','wrath'],
+    ['先给他一个台阶','humility'],
+    ['不争，等他自己想通','patience'],
+    ['帮他把事补上，不再提','kindness'] ] },
+  { q:'半夜饿了', o:[
+    ['点烧烤，加两份肉','gluttony'],
+    ['喝口水，睡了','temperance'],
+    ['躺着忍，懒得动','sloth'],
+    ['点最贵的那家，反正饿','greed'] ] },
+  { q:'刷到擦边内容', o:[
+    ['看完，还顺手点个赞','lust'],
+    ['立刻划走','chastity'],
+    ['看两眼，关掉','temperance'],
+    ['懒得点开，继续刷别的','sloth'] ] },
+  { q:'你的方案被同事拿去汇报', o:[
+    ['当场翻脸，把话说清楚','wrath'],
+    ['忍下来，下次自己先报','patience'],
+    ['「事成了就行」，不计较','humility'],
+    ['凭什么他能站台上','envy'] ] },
+  { q:'房间乱成一团', o:[
+    ['立刻收拾，一件件归位','diligence'],
+    ['假装没看见，先躺下','sloth'],
+    ['只收拾自己那一块','temperance'],
+    ['买新的，旧的直接扔','greed'] ] },
+  { q:'借出去的钱一直没还', o:[
+    ['直接开口催，说清楚','wrath'],
+    ['再等等，他可能真难','patience'],
+    ['心里记账，以后不借了','greed'],
+    ['算了，就当送他了','charity'] ] },
+  { q:'看到同事加班到很晚', o:[
+    ['帮他点份饭带上去','kindness'],
+    ['赶紧走，别被拉下水','sloth'],
+    ['心想：效率真低','pride'],
+    ['担心他抢了我的表现','envy'] ] },
+  { q:'快递堆了一地没拆', o:[
+    ['一次性全拆，摆一地','greed'],
+    ['拆完立刻退掉一半','temperance'],
+    ['分给邻居一些','charity'],
+    ['堆着，等有空再说','sloth'] ] },
+  { q:'有人向你告白，但你没感觉', o:[
+    ['直接说清楚，别耽误人','chastity'],
+    ['委婉拒绝，还安慰他半天','kindness'],
+    ['心里有点得意','pride'],
+    ['先吊着，享受一下被喜欢','lust'] ] },
+  { q:'最后一题：你最想被怎么形容', o:[
+    ['「靠谱」','diligence'],
+    ['「善良」','kindness'],
+    ['「低调」','humility'],
+    ['「大气」','charity'] ] }
+];
+/* ==DATA-END== */
+
+const TOTAL = QUESTIONS.length;
+const LETTERS = ['A','B','C','D'];
+const state = { step:0, answers:[], locked:false, lastResult:null };
+
+const el = (id) => document.getElementById(id);
+const pad2 = (n) => String(n).padStart(2,'0');
+
+function maxPossibleMap(){
+  const m = {};
+  ALL_KEYS.forEach(k => m[k] = 0);
+  QUESTIONS.forEach(q => {
+    const seen = new Set();
+    q.o.forEach(o => {
+      const t = o[1];
+      if(m[t] === undefined) return;
+      if(seen.has(t)) return;
+      seen.add(t);
+      m[t] += 2;
+    });
+  });
+  return m;
+}
+const MAX_POSSIBLE = maxPossibleMap();
+
+function roundTo100(values){
+  // 最大余数法：保证所有显示占比相加正好 100
+  const keys = Object.keys(values);
+  const total = keys.reduce((s,k) => s + values[k], 0);
+  const out = {};
+  if(total <= 0){ keys.forEach(k => out[k] = 0); return out; }
+  const raw = {};
+  let used = 0;
+  keys.forEach(k => {
+    raw[k] = values[k] / total * 100;
+    out[k] = Math.floor(raw[k]);
+    used += out[k];
+  });
+  const byFrac = keys.slice().sort((a,b) => (raw[b] - Math.floor(raw[b])) - (raw[a] - Math.floor(raw[a])));
+  let need = 100 - used;
+  for(let i = 0; i < need && i < byFrac.length; i++) out[byFrac[i]] += 1;
+  return out;
+}
+
+function computeResult(answers){
+  const score = {};
+  ALL_KEYS.forEach(k => score[k] = 0);
+  answers.forEach((optIdx, qi) => {
+    const q = QUESTIONS[qi];
+    const opt = q && q.o[optIdx];
+    if(!opt) return;
+    const t = opt[1];
+    if(score[t] !== undefined) score[t] += 2;
+  });
+  const ratio = {};
+  ALL_KEYS.forEach(k => ratio[k] = MAX_POSSIBLE[k] > 0 ? score[k] / MAX_POSSIBLE[k] : 0);
+  const share = roundTo100(ratio);
+
+  const sinRank = SIN_KEYS.slice().sort((a,b) => share[b] - share[a] || score[b] - score[a]);
+  const virtueRank = VIRTUE_KEYS.slice().sort((a,b) => share[b] - share[a] || score[b] - score[a]);
+  const sinTotal = SIN_KEYS.reduce((s,k) => s + share[k], 0);
+  return {
+    score, ratio, share,
+    sinTop: sinRank[0], virtueTop: virtueRank[0],
+    sinTotal, virtueTotal: 100 - sinTotal,
+    sinRank, virtueRank
+  };
+}
+
+function showScreen(id){
+  ['screenHome','screenQuiz','screenResult'].forEach(s => el(s).classList.toggle('is-active', s === id));
+  window.scrollTo(0,0);
+}
+
+function renderQuestion(){
+  const q = QUESTIONS[state.step];
+  el('qKicker').textContent = `第 ${state.step + 1} 问`;
+  el('qText').textContent = q.q;
+  el('qIndex').textContent = `${pad2(state.step + 1)} / ${TOTAL}`;
+  el('quizCount').textContent = `已完成 ${state.step} / ${TOTAL}`;
+  el('progressFill').style.width = `${(state.step / TOTAL) * 100}%`;
+  el('backBtn').disabled = state.step === 0;
+
+  el('options').innerHTML = q.o.map((opt, i) =>
+    `<button class="option" type="button" data-i="${i}">` +
+      `<span class="badge">${LETTERS[i]}</span>` +
+      `<span class="opt-text">${opt[0]}</span>` +
+    `</button>`
+  ).join('');
+
+  el('qCard').classList.remove('q-in');
+  void el('qCard').offsetWidth;
+  el('qCard').classList.add('q-in');
+}
+
+function chooseOption(i){
+  if(state.locked) return;
+  const q = QUESTIONS[state.step];
+  if(!q || !q.o[i]) return;
+  state.locked = true;
+
+  const buttons = Array.from(el('options').querySelectorAll('.option'));
+  buttons.forEach(b => b.classList.remove('is-selected'));
+  if(buttons[i]) buttons[i].classList.add('is-selected');
+  buttons.forEach((b, idx) => { if(idx !== i) b.classList.add('is-fading'); });
+  el('progressFill').style.width = `${((state.step + 1) / TOTAL) * 100}%`;
+  el('quizCount').textContent = `已完成 ${state.step + 1} / ${TOTAL}`;
+
+  window.setTimeout(() => {
+    state.answers[state.step] = i;
+    state.step += 1;
+    state.locked = false;
+    if(state.step < TOTAL) renderQuestion();
+    else finish();
+  }, 240);
+}
+
+function goBack(){
+  if(state.locked || state.step === 0) return;
+  state.step -= 1;
+  state.answers.length = state.step;
+  renderQuestion();
+}
+
+function renderList(containerId, keys, share, cls){
+  const max = Math.max.apply(null, keys.map(k => share[k]).concat([1]));
+  el(containerId).innerHTML = keys.map(k => {
+    const t = TRAITS[k];
+    const w = Math.round(share[k] / max * 100);
+    return `<div class="trait-row">` +
+      `<span class="t-name">${t.name}</span>` +
+      `<span class="t-track"><i class="${cls}" data-w="${w}"></i></span>` +
+      `<span class="t-pct">${share[k]}%</span>` +
+    `</div>`;
+  }).join('');
+}
+
+function renderResult(data){
+  const sin = TRAITS[data.sinTop];
+  const virtue = TRAITS[data.virtueTop];
+
+  el('sinName').textContent = sin.name;
+  el('sinEn').textContent = sin.en;
+  el('sinPct').textContent = `${data.share[data.sinTop]}%`;
+  el('virtueName').textContent = virtue.name;
+  el('virtueEn').textContent = virtue.en;
+  el('virtuePct').textContent = `${data.share[data.virtueTop]}%`;
+
+  el('combo').innerHTML =
+    `你嘴上说着「<b>${sin.say}</b>」，` +
+    `手上做着「<i>${virtue.do}</i>」。`;
+
+  el('barVirtue').style.width = `${data.virtueTotal}%`;
+  el('barSin').style.width = `${data.sinTotal}%`;
+  el('labelVirtue').textContent = `德 ${data.virtueTotal}%`;
+  el('labelSin').textContent = `罪 ${data.sinTotal}%`;
+  el('sinTotal').textContent = `${data.sinTotal}%`;
+  el('virtueTotal').textContent = `${data.virtueTotal}%`;
+
+  el('sinTitle').textContent = `你的主罪 · ${sin.name}`;
+  el('sinDesc').textContent = sin.desc;
+  el('sinShadow').textContent = sin.shadow;
+  el('sinRemedy').textContent = sin.remedy;
+
+  el('virtueTitle').textContent = `你的主美德 · ${virtue.name}`;
+  el('virtueDesc').textContent = virtue.desc;
+  el('virtueCost').textContent = virtue.cost;
+
+  renderList('sinList', data.sinRank, data.share, 'sin');
+  renderList('virtueList', data.virtueRank, data.share, 'virtue');
+
+  showScreen('screenResult');
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.t-track i').forEach(i => { i.style.width = `${i.dataset.w}%`; });
+  });
+}
+
+function finish(){
+  const data = computeResult(state.answers);
+  state.lastResult = data;
+  renderResult(data);
+}
+
+function startQuiz(){
+  state.step = 0;
+  state.answers = [];
+  state.locked = false;
+  showScreen('screenQuiz');
+  renderQuestion();
+}
+
+el('startBtn').addEventListener('click', startQuiz);
+el('backBtn').addEventListener('click', goBack);
+el('retryBtn').addEventListener('click', startQuiz);
+
+el('options').addEventListener('click', (e) => {
+  const btn = e.target.closest('.option');
+  if(!btn) return;
+  chooseOption(Number(btn.dataset.i));
+});
+
+document.addEventListener('keydown', (e) => {
+  if(!el('screenQuiz').classList.contains('is-active')) return;
+  if(e.key >= '1' && e.key <= '4') chooseOption(Number(e.key) - 1);
+  else if(e.key === 'Backspace'){ e.preventDefault(); goBack(); }
+});
+
+el('copyBtn').addEventListener('click', async () => {
+  const d = state.lastResult;
+  if(!d) return;
+  const sin = TRAITS[d.sinTop], virtue = TRAITS[d.virtueTop];
+  const text =
+    `我的罪与德：${sin.name} ${d.share[d.sinTop]}% × ${virtue.name} ${d.share[d.virtueTop]}%\n` +
+    `德 ${d.virtueTotal}% ／ 罪 ${d.sinTotal}%\n` +
+    `你嘴上说着「${sin.say}」，手上做着「${virtue.do}」。\n` +
+    `来测测你的：七宗罪与七美德占比测试`;
+  try{
+    await navigator.clipboard.writeText(text);
+  }catch(err){
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+  }
+  el('toast').classList.add('is-on');
+  window.setTimeout(() => el('toast').classList.remove('is-on'), 1600);
+});
+
+/* 预览钩子：?preview=quiz 或 ?preview=pride（任意 trait key） */
+(function preview(){
+  const p = new URLSearchParams(location.search).get('preview');
+  if(!p) return;
+  if(p === 'quiz'){ startQuiz(); return; }
+  if(!TRAITS[p]) return;
+  const ratio = {};
+  ALL_KEYS.forEach((k, i) => {
+    ratio[k] = k === p ? 0.85 : Math.max(0.08, 0.55 - (i % 7) * 0.06);
+  });
+  const share = roundTo100(ratio);
+  const data = computeResultFromRatio(ratio, share, p);
+  state.lastResult = data;
+  renderResult(data);
+})();
+
+function computeResultFromRatio(ratio, share, focus){
+  const score = {};
+  ALL_KEYS.forEach(k => score[k] = ratio[k]);
+  const sinRank = SIN_KEYS.slice().sort((a,b) => share[b] - share[a]);
+  const virtueRank = VIRTUE_KEYS.slice().sort((a,b) => share[b] - share[a]);
+  const sinTotal = SIN_KEYS.reduce((s,k) => s + share[k], 0);
+  let sinTop = sinRank[0], virtueTop = virtueRank[0];
+  if(SIN_KEYS.indexOf(focus) >= 0) sinTop = focus;
+  if(VIRTUE_KEYS.indexOf(focus) >= 0) virtueTop = focus;
+  return { score, ratio, share, sinTop, virtueTop, sinTotal, virtueTotal: 100 - sinTotal, sinRank, virtueRank };
+}
+</script>
+</body>
+</html>
